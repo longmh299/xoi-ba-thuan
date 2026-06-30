@@ -7,3 +7,271 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum ReceiveType {
+  PICKUP
+  DELIVERY
+}
+
+enum FoodStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+  HIDDEN
+}
+
+model Shop {
+  id String @id @default(cuid())
+
+  name    String
+  phone   String
+  address String
+  logo String?
+  facebook String?
+  zalo     String?
+
+  shippingFeeDefault Int @default(0)
+
+  isOpen       Boolean @default(true)
+  closeMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("shops")
+}
+
+model Banner {
+  id String @id @default(cuid())
+
+  title     String
+  image     String
+  link      String?
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  phone    String @unique
+  password String
+  name     String
+
+  role UserRole @default(CUSTOMER)
+
+  isActive Boolean @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@map("users")
+}
+
+model Category {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  sortOrder Int @default(0)
+
+  isActive Boolean @default(true)
+
+  foods Food[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Food {
+  id String @id @default(cuid())
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  name        String
+  description String?
+
+  thumbnail String?
+
+  status FoodStatus @default(AVAILABLE)
+
+  soldCount Int @default(0)
+
+  variants FoodVariant[]
+  toppings FoodTopping[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("foods")
+}
+
+model FoodVariant {
+  id String @id @default(cuid())
+
+  foodId String
+  food   Food   @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  name  String
+  price Int
+
+  sortOrder Int @default(0)
+
+  isActive Boolean @default(true)
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([foodId, name])
+  @@index([foodId])
+  @@map("food_variants")
+}
+
+model Topping {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  price Int
+
+  isActive Boolean @default(true)
+
+  foods FoodTopping[]
+
+  sortOrder Int @default(0)
+
+  orderItems OrderItemTopping[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("toppings")
+}
+
+model FoodTopping {
+  id String @id @default(cuid())
+
+  foodId    String
+  toppingId String
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  topping Topping @relation(fields: [toppingId], references: [id], onDelete: Cascade)
+
+  @@unique([foodId, toppingId])
+  @@index([foodId])
+  @@index([toppingId])
+  @@map("food_toppings")
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  orderCode String @unique
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  customerName String
+  phone        String
+
+  receiveType ReceiveType
+
+  address String?
+
+  note         String?
+  shippingNote String?
+
+  itemsTotal Int
+
+  shippingFee Int @default(0)
+
+  discount Int @default(0)
+
+  grandTotal Int
+
+  status OrderStatus @default(PENDING)
+
+  items OrderItem[]
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([createdAt, status])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  foodVariantId String
+  foodVariant   FoodVariant @relation(fields: [foodVariantId], references: [id], onDelete: Restrict)
+
+  quantity Int
+
+  unitPrice Int
+
+  totalPrice Int
+
+  toppings OrderItemTopping[]
+
+  @@index([orderId])
+  @@index([foodVariantId])
+  @@map("order_items")
+}
+
+model OrderItemTopping {
+  id String @id @default(cuid())
+
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  toppingId String
+  topping   Topping @relation(fields: [toppingId], references: [id], onDelete: Restrict)
+
+  quantity Int @default(1)
+
+  unitPrice Int
+
+  totalPrice Int
+
+  @@index([orderItemId])
+  @@index([toppingId])
+  @@map("order_item_toppings")
+}
