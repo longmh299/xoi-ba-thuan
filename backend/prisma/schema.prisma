@@ -37,14 +37,14 @@ enum FoodStatus {
 model Shop {
   id String @id @default(cuid())
 
-  name    String
-  phone   String
-  address String
-  logo String?
-  facebook String?
-  zalo     String?
-
-  shippingFeeDefault Int @default(0)
+  name               String
+  phone              String
+  address            String
+  logo               String?
+  facebook           String?
+  zalo               String?
+  slug               String  @unique @default("main")
+  shippingFeeDefault Int     @default(0)
 
   isOpen       Boolean @default(true)
   closeMessage String?
@@ -58,7 +58,7 @@ model Shop {
 model Banner {
   id String @id @default(cuid())
 
-  title     String
+  title     String  @unique
   image     String
   link      String?
   sortOrder Int     @default(0)
@@ -73,21 +73,27 @@ model Banner {
 model User {
   id String @id @default(cuid())
 
-  phone    String @unique
+  phone String @unique
+
   password String
-  name     String
+
+  name String
 
   role UserRole @default(CUSTOMER)
+
+  refreshToken String?
+
+  lastLoginAt DateTime?
+
+  lastLoginIp String?
 
   isActive Boolean @default(true)
 
   orders Order[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  @@index([phone])
-  @@map("users")
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
@@ -113,7 +119,7 @@ model Food {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
-  name        String
+  name        String  @unique
   description String?
 
   thumbnail String?
@@ -197,7 +203,7 @@ model Order {
   id String @id @default(cuid())
 
   orderCode String @unique
-  
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
@@ -227,6 +233,7 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@index([createdAt, status])
   @@index([userId])
   @@index([status])
