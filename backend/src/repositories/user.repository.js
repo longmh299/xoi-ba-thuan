@@ -33,3 +33,29 @@ export function updateRefreshToken(userId, refreshToken) {
     },
   });
 }
+export function updateLoginInfo(userId, ip) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      lastLoginAt: new Date(),
+      lastLoginIp: ip,
+    },
+  });
+}
+export function getProfile(id) {
+  return prisma.user.findUnique({
+    where: {
+      id,
+    },
+
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      role: true,
+      createdAt: true,
+    },
+  });
+}
