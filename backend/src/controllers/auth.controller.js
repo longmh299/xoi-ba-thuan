@@ -11,11 +11,11 @@ export async function registerController(req, res) {
   const result = registerSchema.safeParse(req.body);
 
   if (!result.success) {
-    return fail(
-      res,
-      result.error.errors[0].message,
-      400
-    );
+   return fail(
+  res,
+  result.error.issues[0].message,
+  400
+);
   }
 
   const data = await registerService(result.data);
@@ -33,10 +33,10 @@ export async function loginController(req, res) {
 
   if (!result.success) {
     return fail(
-      res,
-      result.error.errors[0].message,
-      400
-    );
+  res,
+  result.error.issues[0].message,
+  400
+);
   }
 
   const ip =

@@ -2,8 +2,7 @@ import { getHomeData } from "../services/home.service.js";
 
 export async function getHomeController(req, res) {
   try {
-    const data = await getHomeData();
-
+    const data = await getHomeData(req.query.categoryId);
     return res.json({
       success: true,
       data,

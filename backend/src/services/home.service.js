@@ -1,6 +1,6 @@
 import prisma from "../config/prisma.js";
 
-export async function getHomeData() {
+export async function getHomeData(categoryId) {
   const [shop, banners, categories, foods] = await Promise.all([
     prisma.shop.findFirst({
       select: {
@@ -47,6 +47,10 @@ export async function getHomeData() {
     prisma.food.findMany({
       where: {
         status: "AVAILABLE",
+
+        ...(categoryId && {
+          categoryId: Number(categoryId),
+        }),
       },
 
       orderBy: {
